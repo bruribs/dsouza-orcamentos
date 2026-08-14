@@ -12,6 +12,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 from functools import wraps
+from pypdf import PdfReader, PdfWriter
 
 from flask import Flask, flash, redirect, render_template, request, send_file, url_for, session, abort
 from openpyxl import load_workbook
@@ -865,6 +866,16 @@ def libreoffice_to_pdf(xlsx_path: Path):
         raise RuntimeError(
             f"LibreOffice terminou sem criar o PDF. Detalhe: {detalhe}"
         )
+
+    # Remove paginas auxiliares que o LibreOffice pode exportar.
+    reader = PdfReader(str(pdf_path))
+    if len(reader.pages) > 1:
+        writer = PdfWriter()
+        writer.add_page(reader.pages[0])
+        temp_pdf = pdf_path.with_name(pdf_path.stem + "_pag1.pdf")
+        with temp_pdf.open("wb") as f:
+            writer.write(f)
+        temp_pdf.replace(pdf_path)
 
     return pdf_path
 
