@@ -1,0 +1,75 @@
+DSOUZA ORÇAMENTOS — FASE 2 LOCAL + CONFIGURAÇÕES DA EMPRESA
+============================================================
+
+O que esta versão faz:
+- Cadastro de clientes.
+- Cadastro opcional de serviços para reutilização.
+- Descrição do item 100% manual.
+- Unidades: m², cm², Kg, g e Un.
+- Pagamentos: PIX, Crédito, Débito, Boleto e Dinheiro.
+- Prazos: Imediata, 5, 7, 15, 21, 30, 45 e 60 dias.
+- Cálculo automático dos itens e total geral.
+- Banco SQLite local.
+- Histórico de orçamentos.
+- Geração de Excel usando a planilha original como MODELO MESTRE.
+- Geração de PDF pelo Microsoft Excel para preservar a renderização.
+- NOVO: tela "Configurações da empresa".
+- NOVO: editar nome, CNPJ/CPF, endereço, e-mail, telefone e Instagram.
+- NOVO: enviar/trocar a logo da empresa.
+- NOVO: remover a logo personalizada e voltar à marca original da planilha.
+
+REGRA IMPORTANTE
+A planilha modelo fica em:
+  modelo\Orcamento_Modelo_DSouza.xlsx
+O sistema NUNCA edita esse arquivo diretamente. Ele cria uma cópia em data\gerados e modifica somente a cópia.
+
+DADOS DA EMPRESA
+As configurações ficam no banco local:
+  data\dsouza_orcamentos.db
+A logo personalizada, quando enviada, fica em:
+  data\empresa\logo.png
+
+Ao gerar um novo Excel, o sistema aplica na cópia:
+- CNPJ/CPF
+- endereço
+- e-mail
+- telefone
+- logo personalizada, se houver
+- Instagram junto ao bloco da marca quando uma logo personalizada estiver ativa
+
+COMO INSTALAR PELA PRIMEIRA VEZ
+1. Extraia o ZIP para uma pasta normal do Windows.
+2. Dê dois cliques em INSTALAR_E_INICIAR.bat.
+3. Aguarde a instalação dos componentes.
+4. O navegador abrirá em http://127.0.0.1:5000
+
+NAS PRÓXIMAS VEZES
+Dê dois cliques em INICIAR.bat.
+
+PDF
+Para o PDF sair usando a renderização do próprio Excel, o Microsoft Excel precisa estar instalado no computador.
+
+LIMITE DO MODELO
+O modelo original possui 10 linhas de itens (16 a 25). Esta versão limita cada orçamento a 10 itens para não quebrar a diagramação original.
+
+ACESSO POR OUTRO COMPUTADOR
+Continua bloqueado em 127.0.0.1 nesta fase. Antes de liberar para o segundo computador, devemos adicionar login e revisar a segurança da rede local.
+
+BACKUP
+Para preservar tudo, faça backup da pasta:
+  data\
+Ela contém o banco, configurações, logo e arquivos gerados.
+
+VALIDAÇÃO DE FIDELIDADE — ATUALIZAÇÃO
+- A fonte e os estilos do Excel mestre são preservados; o sistema altera somente o conteúdo das células necessárias.
+- Corrigida a duplicação de "CPF/CNPJ:" e "Telefone:" no documento gerado.
+- Antes de gerar, o sistema confere a estrutura essencial e a fonte principal do modelo original.
+- A fonte de referência do corpo do orçamento é "Bahnschrift Light Condensed", conforme o Excel enviado.
+- O nome da empresa fica salvo nas configurações. Como o nome visual "DSOUZA INTERIORES" faz parte da imagem da marca original, para mudar esse nome no documento é necessário enviar uma nova logo que já contenha a nova marca.
+
+ATUALIZAÇÃO — correção PDF e textos da interface
+- Corrigida a inicialização COM do Microsoft Excel em requisições do sistema.
+- Removida alteração de PageSetup via COM; o PDF respeita a configuração salva no Excel modelo.
+- Em caso de falha, o terminal agora exibe o erro real do Excel para diagnóstico.
+- Removidas as expressões "manualmente"/"preenchimento manual" da interface.
+- Campo de item agora exibe apenas "Descreva o serviço".

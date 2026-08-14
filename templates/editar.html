@@ -1,0 +1,95 @@
+{% extends 'base.html' %}{% block title %}Editar orçamento #{{'%06d'|format(o.numero)}} • DSouza{% endblock %}
+{% block content %}
+<div class="topbar"><div><div class="eyebrow">Editar orçamento #{{'%06d'|format(o.numero)}}</div><h1 class="title">Editar orçamento</h1><p class="subtitle">Altere os dados necessários. O número do orçamento será mantido.</p></div></div>
+<form method="post" id="budgetForm"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<section class="card"><div class="section-head"><h2>Dados do cliente</h2><span class="hint">Você pode selecionar um cliente salvo ou editar os dados abaixo.</span></div>
+  <div class="fields">
+    <div class="field full"><label>Cliente salvo</label><select id="cliente_id" name="cliente_id"><option value="">Cliente atual / novo</option>{% for c in clientes %}<option value="{{c.id}}" {% if o.cliente_id==c.id %}selected{% endif %} data-nome="{{c.nome|e}}" data-documento="{{c.documento|e}}" data-endereco="{{c.endereco|e}}" data-email="{{c.email|e}}" data-telefone="{{c.telefone|e}}">{{c.nome}}</option>{% endfor %}</select></div>
+    <div class="field"><label>Nome / Razão social *</label><input required id="cliente_nome" name="cliente_nome" value="{{o.cliente_nome|e}}"></div>
+    <div class="field"><label>CPF / CNPJ</label><input id="cliente_documento" name="cliente_documento" value="{{(o.cliente_documento or '')|e}}"></div>
+    <div class="field full"><label>Endereço</label><input id="cliente_endereco" name="cliente_endereco" value="{{(o.cliente_endereco or '')|e}}"></div>
+    <div class="field"><label>E-mail</label><input type="email" id="cliente_email" name="cliente_email" value="{{(o.cliente_email or '')|e}}"></div>
+    <div class="field"><label>Telefone</label><input id="cliente_telefone" name="cliente_telefone" value="{{(o.cliente_telefone or '')|e}}"></div>
+  </div>
+</section>
+<section class="card"><div class="section-head"><h2>Itens do orçamento</h2><span class="hint">Clique ou digite para buscar serviços salvos; você também pode escrever livremente. Máximo nesta fase: {{max_itens}} itens.</span></div>
+  <datalist id="servicos_lista">{% for s in servicos %}<option value="{{s.descricao|e}}" data-unidade="{{s.unidade|e}}" data-valor="{{s.valor_padrao or ''}}"></option>{% endfor %}</datalist>
+  <div class="items-wrap"><table class="items"><thead><tr><th>Descrição do serviço</th><th>Qtd.</th><th>Unid.</th><th>Valor unitário</th><th>Total</th><th></th></tr></thead><tbody id="itemsBody"></tbody></table></div>
+  <div class="item-footer"><button type="button" class="btn" id="addItem">＋ Adicionar item</button><div class="total-box"><span>VALOR TOTAL</span><strong id="grandTotal">R$ 0,00</strong></div></div>
+</section>
+<div class="grid2">
+<section class="card"><h2>Condições</h2><div class="fields one"><div class="field"><label>Forma de pagamento</label><select name="pagamento"><option value="">Selecione...</option>{% for x in pagamentos %}<option {% if o.pagamento==x %}selected{% endif %}>{{x}}</option>{% endfor %}</select></div><div class="field"><label>Prazo de entrega</label><select name="prazo"><option value="">Selecione...</option>{% for x in prazos %}<option {% if o.prazo==x %}selected{% endif %}>{{x}}</option>{% endfor %}</select></div></div></section>
+<section class="card"><h2>Observações</h2><div class="field"><label>OBS.</label><textarea name="observacoes" placeholder="Informações adicionais...">{{o.observacoes or ''}}</textarea></div></section>
+</div>
+<div class="form-actions"><a class="btn" href="{{url_for('ver_orcamento',orcamento_id=o.id)}}">Cancelar</a><button type="submit" class="btn primary">Salvar alterações</button></div>
+</form>
+{% endblock %}
+{% block scripts %}<script>
+const units={{unidades|tojson}}; const maxItems={{max_itens}}; const body=document.getElementById('itemsBody');
+const existingItems={{ itens|map(attribute='descricao')|list|tojson }};
+const existingData={{ itens|map(attribute='quantidade')|list|tojson }};
+const existingUnits={{ itens|map(attribute='unidade')|list|tojson }};
+const existingValues={{ itens|map(attribute='valor_unitario')|list|tojson }};
+const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0);
+
+const serviceCatalog=[
+{% for s in servicos %}
+  {descricao:{{s.descricao|tojson}}},
+{% endfor %}
+];
+function normText(v){return (v||'').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function closeServiceMenus(except=null){
+  document.querySelectorAll('.service-suggestions.open').forEach(x=>{if(x!==except)x.classList.remove('open');});
+}
+function applyService(tr,svc){
+  const desc=tr.querySelector('[name="item_descricao[]"]');
+  if(!desc) return;
+  desc.value=svc.descricao||'';
+  desc.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function attachServiceAutocomplete(tr){
+  const desc=tr.querySelector('.item-desc');
+  if(!desc) return;
+  const cell=desc.closest('td');
+  cell.classList.add('service-cell');
+  const menu=document.createElement('div');
+  menu.className='service-suggestions';
+  cell.appendChild(menu);
+
+  const render=()=>{
+    const q=normText(desc.value.trim());
+    let matches=serviceCatalog;
+    if(q) matches=serviceCatalog.filter(s=>normText(s.descricao).includes(q));
+    matches=matches.slice(0,8);
+    menu.innerHTML='';
+    if(!matches.length){menu.classList.remove('open');return;}
+    matches.forEach(s=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='service-suggestion';
+      b.innerHTML=`<span>${s.descricao}</span>`;
+      b.addEventListener('mousedown',e=>{e.preventDefault();applyService(tr,s);menu.classList.remove('open');desc.focus();});
+      menu.appendChild(b);
+    });
+    closeServiceMenus(menu);
+    menu.classList.add('open');
+  };
+
+  desc.addEventListener('focus',render);
+  desc.addEventListener('input',render);
+  desc.addEventListener('keydown',e=>{
+    if(e.key==='Escape') menu.classList.remove('open');
+  });
+  desc.addEventListener('blur',()=>{
+    setTimeout(()=>menu.classList.remove('open'),120);
+  });
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.service-cell'))closeServiceMenus();});
+
+function addRow(desc='',qtd=1,unit='',valor=0){if(body.children.length>=maxItems){alert(`O modelo original comporta até ${maxItems} itens nesta fase.`);return;} const tr=document.createElement('tr');tr.innerHTML=`<td><textarea required name="item_descricao[]" class="desc item-desc" rows="2" placeholder="Descreva o serviço"></textarea></td><td><input required name="item_quantidade[]" type="number" min="0.01" step="0.01"></td><td><select name="item_unidade[]"><option value="">—</option>${units.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></td><td><input required name="item_valor[]" type="number" min="0" step="0.01"></td><td class="item-total">R$ 0,00</td><td><button type="button" class="remove">×</button></td>`;tr.querySelector('[name="item_descricao[]"]').value=desc;tr.querySelector('[name="item_quantidade[]"]').value=qtd;tr.querySelector('[name="item_unidade[]"]').value=unit||'';tr.querySelector('[name="item_valor[]"]').value=valor;tr.querySelectorAll('input,select,textarea').forEach(e=>e.addEventListener('input',calc));tr.querySelector('.remove').onclick=()=>{tr.remove();calc();};const descEl=tr.querySelector('.item-desc'); const grow=()=>{descEl.style.height='auto';descEl.style.height=Math.max(34,descEl.scrollHeight)+'px';}; descEl.addEventListener('input',grow); body.appendChild(tr); attachServiceAutocomplete(tr); grow(); calc();}
+function calc(){let total=0;[...body.children].forEach(tr=>{const q=Number(tr.querySelector('[name="item_quantidade[]"]').value)||0;const v=Number(tr.querySelector('[name="item_valor[]"]').value)||0;const t=q*v;tr.querySelector('.item-total').textContent=fmt(t);total+=t;});document.getElementById('grandTotal').textContent=fmt(total);}
+document.getElementById('addItem').onclick=()=>addRow();
+for(let i=0;i<existingItems.length;i++) addRow(existingItems[i],existingData[i],existingUnits[i]||'',existingValues[i]);
+if(!existingItems.length) addRow();
+document.getElementById('cliente_id').addEventListener('change',e=>{const o=e.target.selectedOptions[0];if(!o.value)return;['nome','documento','endereco','email','telefone'].forEach(k=>{const el=document.getElementById('cliente_'+k);if(el)el.value=o.dataset[k]||'';});});
+</script>{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% block title %}Configurações da empresa • DSouza{% endblock %}
+{% block content %}
+<div class="topbar"><div><div class="eyebrow">Configurações</div><h1 class="title">Informações da empresa</h1><p class="subtitle">Esses dados serão usados nos novos arquivos Excel e PDF gerados pelo sistema.</p></div></div>
+<div class="grid-company">
+<section class="card">
+  <h2>Dados da empresa</h2>
+  <form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="fields">
+      <div class="field full"><label>Nome / Razão social</label><input name="nome" value="{{empresa.nome or ''}}"></div>
+      <div class="field"><label>CNPJ / CPF</label><input name="documento" value="{{empresa.documento or ''}}"></div>
+      <div class="field"><label>Telefone / WhatsApp</label><input name="telefone" value="{{empresa.telefone or ''}}"></div>
+      <div class="field full"><label>Endereço</label><input name="endereco" value="{{empresa.endereco or ''}}"></div>
+      <div class="field"><label>E-mail</label><input type="email" name="email" value="{{empresa.email or ''}}"></div>
+      <div class="field"><label>Instagram</label><div class="input-prefix"><span>@</span><input name="instagram" value="{{empresa.instagram or ''}}"></div></div>
+      <div class="field full"><label>Nova logo</label><input type="file" name="logo" accept=".png,.jpg,.jpeg,image/png,image/jpeg"><div class="field-note">PNG ou JPG, até 5 MB. Se não escolher uma imagem, a logo atual é mantida.</div></div>
+    </div>
+    <div class="form-actions top-gap"><button class="btn primary" type="submit">Salvar configurações</button></div>
+  </form>
+</section>
+<section class="card logo-card">
+  <h2>Logo atual</h2>
+  <div class="logo-preview">
+    {% if has_logo %}<img src="{{url_for('ver_logo_empresa')}}?v={{empresa.atualizado_em}}" alt="Logo da empresa">
+    {% else %}<div class="original-logo"><strong>Logo original da planilha</strong><span>Nenhuma logo personalizada foi enviada. O sistema continuará usando a marca que já existe no arquivo modelo.</span></div>{% endif %}
+  </div>
+  {% if has_logo %}<form method="post" action="{{url_for('remover_logo')}}" onsubmit="return confirm('Remover a logo personalizada e voltar à logo original da planilha?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger" type="submit">Remover logo personalizada</button></form>{% endif %}
+  <div class="info-box"><strong>Como funciona</strong><span>A planilha mestre não é alterada. Ao gerar um orçamento, o sistema cria uma cópia e aplica nela os dados acima.</span></div>
+</section>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+﻿.venv/
+__pycache__/
+*.pyc
+.git/
+.env
+.env.*
+data/
+orcamentos/
+*.db
+*.sqlite
+*.sqlite3
+app_ANTES_*.py
+app_BACKUP_*.py
+app_PRONTO_*.py
+teste_exportacao_pdf.pdf
+*_TESTE.pdf
