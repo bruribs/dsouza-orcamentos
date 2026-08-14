@@ -23,6 +23,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from secrets import token_urlsafe, compare_digest
 
 BASE = Path(__file__).resolve().parent
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 DB_PATH = os.environ.get("DSOUZA_DB_PATH", "").strip()
 DB = Path(DB_PATH) if DB_PATH else BASE / "data" / "dsouza_orcamentos.db"
 TEMPLATE_XLSX = BASE / "modelo" / "Orcamento_Modelo_DSouza.xlsx"
@@ -65,13 +66,133 @@ DEFAULT_COMPANY = {
 }
 
 
+class CompatRow(dict):
+    """Linha com acesso por nome e tamb?m por ?ndice, como sqlite3.Row."""
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.values())[key]
+        return super().__getitem__(key)
+
+
+def _pg_convert_row(cursor, row):
+    if row is None:
+        return None
+    if not cursor.description:
+        return row
+
+    cols = []
+    for desc in cursor.description:
+        cols.append(getattr(desc, "name", desc[0]))
+
+    return CompatRow(zip(cols, row))
+
+
+def _pg_sql(query):
+    query = query.replace(
+        "printf('%06d', numero)",
+        "LPAD(CAST(numero AS TEXT), 6, '0')"
+    )
+    return query.replace("?", "%s")
+
+
+class PgCursorCompat:
+    def __init__(self, cursor, lastrowid=None):
+        self.cursor = cursor
+        self.lastrowid = lastrowid
+
+    def fetchone(self):
+        return _pg_convert_row(self.cursor, self.cursor.fetchone())
+
+    def fetchall(self):
+        return [
+            _pg_convert_row(self.cursor, row)
+            for row in self.cursor.fetchall()
+        ]
+
+    def __iter__(self):
+        for row in self.cursor:
+            yield _pg_convert_row(self.cursor, row)
+
+
+class PgConnectionCompat:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def execute(self, query, params=()):
+        sql = _pg_sql(query)
+        stripped = sql.strip().rstrip(";")
+        upper = stripped.upper()
+
+        # Em PostgreSQL, recupera automaticamente o ID inserido
+        # para manter compatibilidade com cursor.lastrowid do SQLite.
+        if upper.startswith("INSERT INTO") and " RETURNING " not in upper:
+            sql = stripped + " RETURNING id"
+            cur = self.conn.execute(sql, params)
+            row = cur.fetchone()
+            lastrowid = row[0] if row else None
+            return PgCursorCompat(cur, lastrowid)
+
+        cur = self.conn.execute(sql, params)
+        return PgCursorCompat(cur)
+
+    def executemany(self, sql, seq_of_params):
+        sql = sql.replace("?", "%s")
+        cur = self.conn.cursor()
+        cur.executemany(sql, seq_of_params)
+        return PgCursorCompat(cur)
+
+    def executescript(self, script):
+        # O schema SQLite usa AUTOINCREMENT.
+        # SERIAL ? o equivalente apropriado para este projeto no PostgreSQL.
+        script = script.replace(
+            "INTEGER PRIMARY KEY AUTOINCREMENT",
+            "SERIAL PRIMARY KEY"
+        )
+
+        for statement in script.split(";"):
+            statement = statement.strip()
+            if statement:
+                self.conn.execute(statement)
+
+    def commit(self):
+        self.conn.commit()
+
+    def rollback(self):
+        self.conn.rollback()
+
+    def close(self):
+        self.conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        try:
+            if exc_type is None:
+                self.conn.commit()
+            else:
+                self.conn.rollback()
+        finally:
+            self.conn.close()
+
+
 def db_conn():
+    if DATABASE_URL:
+        try:
+            import psycopg
+        except ImportError as exc:
+            raise RuntimeError(
+                "Driver PostgreSQL nao instalado. Instale psycopg[binary]."
+            ) from exc
+
+        conn = psycopg.connect(DATABASE_URL)
+        return PgConnectionCompat(conn)
+
     DB.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
-
 
 
 _LOGIN_ATTEMPTS = {}
@@ -929,8 +1050,8 @@ def novo_orcamento():
             flash(str(e), "error")
 
     with db_conn() as con:
-        clientes = con.execute("SELECT * FROM clientes ORDER BY nome COLLATE NOCASE").fetchall()
-        servicos = con.execute("SELECT * FROM servicos ORDER BY descricao COLLATE NOCASE").fetchall()
+        clientes = con.execute("SELECT * FROM clientes ORDER BY nome").fetchall()
+        servicos = con.execute("SELECT * FROM servicos ORDER BY descricao").fetchall()
     return render_template(
         "novo.html", clientes=clientes, servicos=servicos,
         unidades=UNIDADES, pagamentos=PAGAMENTOS, prazos=PRAZOS,
@@ -955,7 +1076,7 @@ def clientes():
             flash("Cliente cadastrado.", "success")
             return redirect(url_for("clientes"))
     with db_conn() as con:
-        rows = con.execute("SELECT * FROM clientes ORDER BY nome COLLATE NOCASE").fetchall()
+        rows = con.execute("SELECT * FROM clientes ORDER BY nome").fetchall()
     return render_template("clientes.html", clientes=rows)
 
 
@@ -987,7 +1108,7 @@ def servicos():
             except sqlite3.IntegrityError:
                 flash("Esse serviÃ§o jÃ¡ estÃ¡ cadastrado.", "error")
     with db_conn() as con:
-        rows = con.execute("SELECT * FROM servicos ORDER BY descricao COLLATE NOCASE").fetchall()
+        rows = con.execute("SELECT * FROM servicos ORDER BY descricao").fetchall()
     return render_template("servicos.html", servicos=rows, unidades=UNIDADES)
 
 
@@ -1107,8 +1228,8 @@ def editar_orcamento(orcamento_id):
             o, itens = budget_data(orcamento_id)
 
     with db_conn() as con:
-        clientes = con.execute("SELECT * FROM clientes ORDER BY nome COLLATE NOCASE").fetchall()
-        servicos = con.execute("SELECT * FROM servicos ORDER BY descricao COLLATE NOCASE").fetchall()
+        clientes = con.execute("SELECT * FROM clientes ORDER BY nome").fetchall()
+        servicos = con.execute("SELECT * FROM servicos ORDER BY descricao").fetchall()
 
     return render_template(
         "editar.html", o=o, itens=itens, clientes=clientes, servicos=servicos,
@@ -1170,4 +1291,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 

@@ -55,7 +55,7 @@ function attachServiceAutocomplete(tr){
   const render=()=>{
     const q=normText(desc.value.trim());
     let matches=serviceCatalog;
-    if(q) matches=serviceCatalog.filter(s=>normText(s.descricao).includes(q));
+    if(!q){menu.classList.remove('open');return;} matches=serviceCatalog.filter(s=>normText(s.descricao).includes(q));
     matches=matches.slice(0,8);
     menu.innerHTML='';
     if(!matches.length){menu.classList.remove('open');return;}
@@ -71,7 +71,7 @@ function attachServiceAutocomplete(tr){
     menu.classList.add('open');
   };
 
-  desc.addEventListener('focus',render);
+  
   desc.addEventListener('input',render);
   desc.addEventListener('keydown',e=>{
     if(e.key==='Escape') menu.classList.remove('open');
