@@ -1172,7 +1172,7 @@ def empresa():
                 (nome, documento, endereco, email, telefone, instagram, logo_rel,
                  datetime.now().isoformat(timespec="seconds")),
             )
-        flash("InformaÃ§Ãµes da empresa atualizadas.", "success")
+        flash("Informações da empresa atualizadas.", "success")
         return redirect(url_for("empresa"))
 
     return render_template("empresa.html", empresa=get_company(), has_logo=COMPANY_LOGO.exists())
@@ -1302,6 +1302,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
