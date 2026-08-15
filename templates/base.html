@@ -15,7 +15,7 @@
     <a class="{{ 'active' if request.endpoint in ['historico','ver_orcamento'] else '' }}" href="{{ url_for('historico') }}">Histórico</a>
     <a class="{{ 'active' if request.endpoint=='servicos' else '' }}" href="{{ url_for('servicos') }}">Serviços</a>
     <a class="{{ 'active' if request.endpoint in ['empresa','ver_logo_empresa','remover_logo'] else '' }}" href="{{ url_for('empresa') }}">Configurações da empresa</a>
-  <form method="post" action="{{ url_for('logout') }}" style="margin-top:16px;"><button type="submit" class="btn danger" style="width:100%;">Sair</button></form></nav>
+  <form method="post" action="{{ url_for('logout') }}" style="margin-top:16px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn danger" style="width:100%;">Sair</button></form></nav>
   <footer>DSouza Orçamentos<br>Sistema online de orçamentos</footer>
 </aside>
 <main class="main">
