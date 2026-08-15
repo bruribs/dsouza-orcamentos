@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 import shutil
@@ -658,6 +658,9 @@ def generate_excel(orcamento_id):
 
     wb = load_workbook(out)
     ws = wb["ORÇAMENTO"]
+
+    # Ajuste da coluna ITEM para evitar corte no PDF.
+    ws.column_dimensions["A"].width = 50
     empresa = get_company()
 
     # Cabeçalho compacto: ícone e texto ficam no mesmo bloco visual.
@@ -707,14 +710,12 @@ def generate_excel(orcamento_id):
     for row in range(16, 26):
         if row in used_rows:
             description = str(ws.cell(row, 1).value or "")
-            if len(description) > 120:
-                ws.row_dimensions[row].height = 72
-            elif len(description) > 80:
-                ws.row_dimensions[row].height = 58
-            elif len(description) > 45:
-                ws.row_dimensions[row].height = 44
+            if description:
+                linhas = max(1, (len(description) + 49) // 50)
+                altura = min(180, max(30, linhas * 18))
+                ws.row_dimensions[row].height = altura
             else:
-                ws.row_dimensions[row].height = 30
+                ws.row_dimensions[row].height = 22
         else:
             ws.row_dimensions[row].height = 22
 
@@ -1297,6 +1298,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
