@@ -726,29 +726,24 @@ def generate_excel(orcamento_id):
             ws.merge_cells(faixa)
     ws["D28"] = f"Condições de pagamento:  {o['pagamento'] or ''}"
     ws["D29"] = f"Prazo de entrega:  {o['prazo'] or ''}"
-    # ObservaÃ§Ãµes usam uma Ã¡rea larga e alta para nÃ£o cortar textos com mais de uma linha.
-    faixa_obs = "A31:E32"
+    # Observações usam uma área larga e alta para não cortar textos com mais de uma linha.
+    faixa_obs = "A31:E34"
     if faixa_obs not in [str(rng) for rng in ws.merged_cells.ranges]:
-        # Remove mesclagens conflitantes na Ã¡rea, se houver.
+        # Remove mesclagens conflitantes na área, se houver.
         for rng in list(ws.merged_cells.ranges):
-            if rng.min_row <= 32 and rng.max_row >= 31 and rng.min_col <= 5 and rng.max_col >= 1:
+            if rng.min_row <= 34 and rng.max_row >= 31 and rng.min_col <= 5 and rng.max_col >= 1:
                 ws.unmerge_cells(str(rng))
         ws.merge_cells(faixa_obs)
     obs_texto = (o["observacoes"] or "").strip()
     ws["A31"] = f"OBS: {obs_texto}" if obs_texto else "OBS:"
     ws["A31"].alignment = copy.copy(ws["A31"].alignment)
     ws["A31"].alignment = ws["A31"].alignment.copy(wrap_text=True, vertical="top", horizontal="left")
-    linhas_obs = max(1, obs_texto.count("\n") + 1)
-    tamanho_obs = len(obs_texto.replace("\n", " "))
-    if tamanho_obs > 150 or linhas_obs >= 3:
-        ws.row_dimensions[31].height = 36
-        ws.row_dimensions[32].height = 26
-    elif tamanho_obs > 75 or linhas_obs == 2:
-        ws.row_dimensions[31].height = 30
-        ws.row_dimensions[32].height = 22
-    else:
-        ws.row_dimensions[31].height = 24
-        ws.row_dimensions[32].height = 18
+    linhas_texto = obs_texto.splitlines() or [""]
+    linhas_visuais = sum(max(1, (len(linha) + 89) // 90) for linha in linhas_texto)
+    altura_total = 72 if not obs_texto else min(120, max(72, 18 + linhas_visuais * 13))
+    altura_linha = altura_total / 4
+    for row in range(31, 35):
+        ws.row_dimensions[row].height = altura_linha
 
       # Mensagens finais: validade em cima e agradecimento logo abaixo.
     for faixa in ("A35:E35", "A37:E37"):
@@ -1302,6 +1297,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
