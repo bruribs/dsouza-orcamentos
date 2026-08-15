@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import tempfile
 import copy
 import sqlite3
 import sys
@@ -842,6 +843,7 @@ def libreoffice_to_pdf(xlsx_path: Path):
     resultado = subprocess.run(
         [
             soffice,
+            f"-env:UserInstallation={Path(tempfile.mkdtemp()).resolve().as_uri()}",
             "--headless",
             "--convert-to",
             "pdf",
@@ -1302,6 +1304,11 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
+
+
+
+
 
 
 
