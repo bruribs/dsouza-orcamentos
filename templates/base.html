@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -10,13 +10,13 @@
 <aside class="sidebar">
   <div class="brand"><div class="brand-badge">DS</div><div>DSouza<br><span>Orçamentos</span></div></div>
   <nav class="nav">
-    <a class="{{ 'active' if request.endpoint=='novo_orcamento' else '' }}" href="{{ url_for('novo_orcamento') }}">＋ Novo orçamento</a>
+    <a class="{{ 'active' if request.endpoint=='novo_orcamento' else '' }}" href="{{ url_for('novo_orcamento') }}">ï¼‹ Novo orçamento</a>
     <a class="{{ 'active' if request.endpoint=='clientes' else '' }}" href="{{ url_for('clientes') }}">Clientes</a>
     <a class="{{ 'active' if request.endpoint in ['historico','ver_orcamento'] else '' }}" href="{{ url_for('historico') }}">Histórico</a>
     <a class="{{ 'active' if request.endpoint=='servicos' else '' }}" href="{{ url_for('servicos') }}">Serviços</a>
     <a class="{{ 'active' if request.endpoint in ['empresa','ver_logo_empresa','remover_logo'] else '' }}" href="{{ url_for('empresa') }}">Configurações da empresa</a>
   </nav>
-  <footer>Fase 2 • versão local<br>Sem mensalidade • dados no próprio computador.</footer>
+  <footer>DSouza Orçamentos<br>Sistema online de orçamentos</footer>
 </aside>
 <main class="main">
   {% with messages = get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="flash {{category}}">{{msg}}</div>{% endfor %}{% endwith %}
@@ -25,3 +25,5 @@
 </div>
 {% block scripts %}{% endblock %}
 </body></html>
+
+
