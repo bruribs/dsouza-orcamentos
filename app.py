@@ -668,7 +668,7 @@ def generate_excel(orcamento_id):
         ws["D3"] = f"{recuo}{empresa['email'] or ''}"
         ws["D4"] = f"{recuo}{empresa['telefone'] or ''}"
         if empresa["instagram"]:
-            ws["A4"] = f"@{empresa['instagram'].lstrip('@')}"
+            ws["A7"] = f"@{empresa['instagram'].lstrip('@')}"
 
         custom = BASE / empresa["logo_path"] if empresa["logo_path"] else None
         logo_source = custom if custom and custom.exists() else DEFAULT_LOGO
@@ -1304,6 +1304,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
