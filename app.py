@@ -575,7 +575,7 @@ def _arrange_header_images(ws, logo_source: Path):
     render_logo = _prepare_logo_for_excel(logo_source)
     with PILImage.open(render_logo) as pil:
         w, h = pil.size
-    max_w, max_h = 290, 100
+    max_w, max_h = 350, 120
     scale = min(max_w / max(w, 1), max_h / max(h, 1))
     logo = XLImage(str(render_logo))
     logo.width = max(1, int(w * scale))
@@ -1304,6 +1304,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
     print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
