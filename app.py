@@ -23,6 +23,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from secrets import token_urlsafe, compare_digest
+from datetime import timedelta
 
 BASE = Path(__file__).resolve().parent
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
@@ -43,6 +44,8 @@ IS_PRODUCTION = bool(os.environ.get("RENDER") or os.environ.get("DSOUZA_PRODUCTI
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True
 
 SECRET_KEY = os.environ.get("DSOUZA_SECRET_KEY", "").strip()
 
@@ -987,6 +990,21 @@ def csrf_token():
 app.jinja_env.globals["csrf_token"] = csrf_token
 
 
+@app.after_request
+def security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+    if IS_PRODUCTION:
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+
+    return response
+
+
 @app.before_request
 def security_before_request():
     if request.method == "POST":
@@ -1035,6 +1053,7 @@ def login():
 
         clear_login_failures(client_key)
         session.clear()
+        session.permanent = True
         session["user_id"] = user["id"]
         session["username"] = user["username"]
         session["role"] = user["role"]
