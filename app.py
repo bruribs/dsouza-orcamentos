@@ -38,6 +38,12 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 IS_PRODUCTION = bool(os.environ.get("RENDER") or os.environ.get("DSOUZA_PRODUCTION"))
+
+# Protecoes do cookie de sessao.
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
+
 SECRET_KEY = os.environ.get("DSOUZA_SECRET_KEY", "").strip()
 
 if IS_PRODUCTION and not SECRET_KEY:
