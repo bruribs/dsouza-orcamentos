@@ -798,7 +798,11 @@ def generate_excel(orcamento_id):
     for row in range(16, 26):
         ws.cell(row, 1).alignment = copy.copy(ws.cell(row, 1).alignment)
         ws.cell(row, 1).alignment = ws.cell(row, 1).alignment.copy(
-            wrap_text=True, vertical="center"
+            horizontal="left",
+            vertical="center",
+            wrap_text=True,
+            indent=1,
+            shrink_to_fit=False,
         )
 
     wb.save(out)
