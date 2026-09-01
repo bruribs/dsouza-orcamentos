@@ -829,6 +829,13 @@ def generate_excel(orcamento_id):
             indent=1,
             shrink_to_fit=False,
         )
+        for col in (4, 5):
+            ws.cell(row, col).alignment = copy.copy(ws.cell(row, col).alignment)
+            ws.cell(row, col).alignment = ws.cell(row, col).alignment.copy(
+                horizontal="center", vertical="center"
+            )
+        ws.cell(row, 5).font = copy.copy(ws.cell(row, 5).font)
+        ws.cell(row, 5).font = ws.cell(row, 5).font.copy(bold=True)
 
     wb.save(out)
     return out
