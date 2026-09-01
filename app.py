@@ -913,8 +913,10 @@ def libreoffice_to_pdf(xlsx_path: Path):
                     cell = ws_pdf.cell(row, col)
                     if isinstance(cell.value, (int, float)):
                         cell.value = moeda_brasileira(cell.value)
+                        cell.number_format = "@"
         if isinstance(ws_pdf["E36"].value, (int, float)):
             ws_pdf["E36"] = moeda_brasileira(ws_pdf["E36"].value)
+            ws_pdf["E36"].number_format = "@"
         wb_pdf.save(pdf_source)
 
         resultado = subprocess.run(
