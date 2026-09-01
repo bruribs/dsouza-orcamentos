@@ -712,7 +712,7 @@ def generate_excel(orcamento_id):
         ws.cell(row, 3).value = None
         ws.cell(row, 4).value = None
         ws.cell(row, 5).value = None
-        ws.cell(row, 5).number_format = '"R$" #,##0.00;[Red]-"R$" #,##0.00;;'
+        ws.cell(row, 5).number_format = '[$R$-pt-BR] #,##0.00;[Red]-[$R$-pt-BR] #,##0.00;;'
 
     for idx, it in enumerate(itens, start=16):
         ws.cell(idx, 1).value = it["descricao"]
