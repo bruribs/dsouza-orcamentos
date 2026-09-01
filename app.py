@@ -726,8 +726,13 @@ def generate_excel(orcamento_id):
         if row in used_rows:
             description = str(ws.cell(row, 1).value or "")
             if description:
-                linhas = max(1, (len(description) + 69) // 70)
-                altura = min(180, max(30, linhas * 18))
+                # Conta separadamente quebras manuais e quebras automáticas.
+                # Somar apenas o tamanho total cortava a última linha no Excel.
+                linhas = sum(
+                    max(1, (len(parte) + 54) // 55)
+                    for parte in (description.splitlines() or [""])
+                )
+                altura = min(180, max(30, linhas * 15))
                 ws.row_dimensions[row].height = altura
             else:
                 ws.row_dimensions[row].height = 22
