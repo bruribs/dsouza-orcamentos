@@ -834,8 +834,10 @@ def generate_excel(orcamento_id):
     ws.page_setup.orientation = "portrait"
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
+    ws.page_setup.fitToHeight = 1
+    ws.page_setup.scale = None
     ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.print_options.horizontalCentered = True
     ws.page_margins.left = 0.20
     ws.page_margins.right = 0.20
     ws.page_margins.top = 0.25
