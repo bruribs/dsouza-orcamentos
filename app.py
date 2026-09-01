@@ -64,7 +64,7 @@ app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 UNIDADES = ["m²", "cm²", "ml", "Kg", "g", "Un."]
 PAGAMENTOS = ["PIX", "Crédito", "Débito", "Boleto", "Dinheiro"]
 PRAZOS = ["Imediata", "5 dias", "7 dias", "15 dias", "21 dias", "30 dias", "45 dias", "60 dias"]
-MAX_ITENS_TEMPLATE = 10
+MAX_ITENS_TEMPLATE = 20
 ALLOWED_LOGO = {"png", "jpg", "jpeg"}
 
 DEFAULT_COMPANY = {
@@ -636,8 +636,8 @@ def validate_template_structure():
         prefixes = {
             "C9": "CPF/CNPJ:",
             "C11": "Telefone:",
-            "D28": "Condições de pagamento:",
-            "D29": "Prazo de entrega:",
+            "D38": "Condições de pagamento:",
+            "D39": "Prazo de entrega:",
         }
         for cell, prefix in prefixes.items():
             current = str(ws[cell].value or "").strip()
@@ -669,7 +669,9 @@ def generate_excel(orcamento_id):
     ws = wb["ORÇAMENTO"]
 
     # Ajuste da coluna ITEM para evitar corte no PDF.
-    ws.column_dimensions["A"].width = 50
+    # Mantém a largura original do modelo. A largura 50 espremia as demais
+    # colunas quando o PDF era ajustado para uma página na horizontal.
+    ws.column_dimensions["A"].width = 42
     empresa = get_company()
 
     # Cabeçalho compacto: ícone e texto ficam no mesmo bloco visual.
@@ -700,7 +702,7 @@ def generate_excel(orcamento_id):
 
     # Limpa as linhas de itens. Linhas sem item ficam realmente vazias.
     # O formato do total também oculta zero, evitando R$ 0,00 em linhas não utilizadas.
-    for row in range(16, 26):
+    for row in range(16, 36):
         ws.cell(row, 1).value = None
         ws.cell(row, 2).value = None
         ws.cell(row, 3).value = None
@@ -716,7 +718,7 @@ def generate_excel(orcamento_id):
         ws.cell(idx, 5).value = it["total"]
 
     used_rows = set(range(16, 16 + len(itens)))
-    for row in range(16, 26):
+    for row in range(16, 36):
         if row in used_rows:
             description = str(ws.cell(row, 1).value or "")
             if description:
@@ -728,69 +730,70 @@ def generate_excel(orcamento_id):
         else:
             ws.row_dimensions[row].height = 22
 
-    ws["E26"] = o["total"]
+    ws["E36"] = o["total"]
 
     # Condições e prazo ficam em um único bloco, sem o grande espaço entre rótulo e valor.
-    for faixa in ("D28:E28", "D29:E29"):
+    for faixa in ("D38:E38", "D39:E39"):
         if faixa not in [str(rng) for rng in ws.merged_cells.ranges]:
             ws.merge_cells(faixa)
-    ws["D28"] = f"Condições de pagamento:  {o['pagamento'] or ''}"
-    ws["D29"] = f"Prazo de entrega:  {o['prazo'] or ''}"
+    ws["D38"] = f"Condições de pagamento:  {o['pagamento'] or ''}"
+    ws["D39"] = f"Prazo de entrega:  {o['prazo'] or ''}"
     # Observações usam uma área larga e alta para não cortar textos com mais de uma linha.
-    faixa_obs = "A31:E34"
+    faixa_obs = "A41:E44"
     if faixa_obs not in [str(rng) for rng in ws.merged_cells.ranges]:
         # Remove mesclagens conflitantes na área, se houver.
         for rng in list(ws.merged_cells.ranges):
-            if rng.min_row <= 34 and rng.max_row >= 31 and rng.min_col <= 5 and rng.max_col >= 1:
+            if rng.min_row <= 44 and rng.max_row >= 41 and rng.min_col <= 5 and rng.max_col >= 1:
                 ws.unmerge_cells(str(rng))
         ws.merge_cells(faixa_obs)
     obs_texto = (o["observacoes"] or "").strip()
-    ws["A31"] = f"OBS: {obs_texto}" if obs_texto else "OBS:"
-    ws["A31"].alignment = copy.copy(ws["A31"].alignment)
-    ws["A31"].alignment = ws["A31"].alignment.copy(wrap_text=True, vertical="top", horizontal="left")
+    ws["A41"] = f"OBS: {obs_texto}" if obs_texto else "OBS:"
+    ws["A41"].alignment = copy.copy(ws["A41"].alignment)
+    ws["A41"].alignment = ws["A41"].alignment.copy(wrap_text=True, vertical="top", horizontal="left")
     linhas_texto = obs_texto.splitlines() or [""]
     linhas_visuais = sum(max(1, (len(linha) + 89) // 90) for linha in linhas_texto)
     altura_total = 72 if not obs_texto else min(120, max(72, 18 + linhas_visuais * 13))
     altura_linha = altura_total / 4
-    for row in range(31, 35):
+    for row in range(41, 45):
         ws.row_dimensions[row].height = altura_linha
 
       # Mensagens finais: validade em cima e agradecimento logo abaixo.
-    for faixa in ("A35:E35", "A37:E37"):
+    for faixa in ("A45:E45", "A47:E47"):
         for rng in list(ws.merged_cells.ranges):
             if str(rng) == faixa:
                 break
         else:
             ws.merge_cells(faixa)
 
-    ws["A35"] = 'O orçamento é válido por 30 dias.'
-    ws["A35"].font = copy.copy(ws["A31"].font)
-    ws["A35"].font = ws["A35"].font.copy(
+    ws["A45"] = 'O orçamento é válido por 30 dias.'
+    ws["A45"].font = copy.copy(ws["A41"].font)
+    ws["A45"].font = ws["A45"].font.copy(
         name="Arial", size=12, bold=True, italic=False
     )
-    ws["A35"].alignment = copy.copy(ws["A31"].alignment)
-    ws["A35"].alignment = ws["A35"].alignment.copy(
+    ws["A45"].alignment = copy.copy(ws["A41"].alignment)
+    ws["A45"].alignment = ws["A45"].alignment.copy(
         horizontal="center", vertical="center", wrap_text=True
     )
-    ws.row_dimensions[35].height = 24
+    ws.row_dimensions[45].height = 24
 
     closing = 'Desde já, agradecemos a preferência.'
-    ws["A37"] = closing
-    ws["A37"].font = copy.copy(ws["A31"].font)
-    ws["A37"].font = ws["A37"].font.copy(
+    ws["A47"] = closing
+    ws["A47"].font = copy.copy(ws["A41"].font)
+    ws["A47"].font = ws["A47"].font.copy(
         name="Arial", size=11, bold=False, italic=True
     )
-    ws["A37"].alignment = copy.copy(ws["A31"].alignment)
-    ws["A37"].alignment = ws["A37"].alignment.copy(
+    ws["A47"].alignment = copy.copy(ws["A41"].alignment)
+    ws["A47"].alignment = ws["A47"].alignment.copy(
         horizontal="center", vertical="center", wrap_text=True
     )
-    ws.row_dimensions[37].height = 24
+    ws.row_dimensions[47].height = 24
 
     # Limpa a frase antiga do modelo para não duplicar.
-    if ws["C34"].value == closing:
-        ws["C34"] = None
+    if ws["C44"].value == closing:
+        ws["C44"] = None
 
-    ws.print_area = "A1:E37"
+    ws.print_area = "A1:E47"
+    ws.print_title_rows = "14:15"
     ws.sheet_view.showGridLines = False
     ws.page_setup.orientation = "portrait"
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
@@ -804,7 +807,7 @@ def generate_excel(orcamento_id):
     ws.page_margins.header = 0
     ws.page_margins.footer = 0
 
-    for row in range(16, 26):
+    for row in range(16, 36):
         ws.cell(row, 1).alignment = copy.copy(ws.cell(row, 1).alignment)
         ws.cell(row, 1).alignment = ws.cell(row, 1).alignment.copy(
             horizontal="left",
