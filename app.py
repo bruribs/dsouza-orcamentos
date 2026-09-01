@@ -669,9 +669,13 @@ def generate_excel(orcamento_id):
     ws = wb["ORÇAMENTO"]
 
     # Ajuste da coluna ITEM para evitar corte no PDF.
-    # Mantém a largura original do modelo. A largura 50 espremia as demais
-    # colunas quando o PDF era ajustado para uma página na horizontal.
-    ws.column_dimensions["A"].width = 42
+    # Proporções compactas para o PDF: prioriza a descrição e evita grandes
+    # vazios nas colunas curtas de quantidade, unidade e valores.
+    ws.column_dimensions["A"].width = 60
+    ws.column_dimensions["B"].width = 8
+    ws.column_dimensions["C"].width = 9
+    ws.column_dimensions["D"].width = 18
+    ws.column_dimensions["E"].width = 18
     empresa = get_company()
 
     # Cabeçalho compacto: ícone e texto ficam no mesmo bloco visual.
@@ -722,7 +726,7 @@ def generate_excel(orcamento_id):
         if row in used_rows:
             description = str(ws.cell(row, 1).value or "")
             if description:
-                linhas = max(1, (len(description) + 49) // 50)
+                linhas = max(1, (len(description) + 69) // 70)
                 altura = min(180, max(30, linhas * 18))
                 ws.row_dimensions[row].height = altura
             else:
