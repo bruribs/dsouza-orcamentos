@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 import shutil
@@ -61,8 +61,8 @@ if len(SECRET_KEY) < 32:
 app.secret_key = SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-UNIDADES = ["m²", "cm²", "ml", "Kg", "g", "Un."]
-PAGAMENTOS = ["PIX", "Crédito", "Débito", "Boleto", "Dinheiro"]
+UNIDADES = ["mÂ²", "cmÂ²", "ml", "Kg", "g", "Un."]
+PAGAMENTOS = ["PIX", "CrÃ©dito", "DÃ©bito", "Boleto", "Dinheiro"]
 PRAZOS = ["Imediata", "5 dias", "7 dias", "15 dias", "21 dias", "30 dias", "45 dias", "60 dias"]
 MAX_ITENS_TEMPLATE = 20
 ALLOWED_LOGO = {"png", "jpg", "jpeg"}
@@ -381,17 +381,17 @@ def save_budget_from_form():
         if not desc and qtd == 0 and valor == 0:
             continue
         if not desc:
-            raise ValueError(f"Informe a descrição do item {i + 1}.")
+            raise ValueError(f"Informe a descriÃ§Ã£o do item {i + 1}.")
         if qtd <= 0:
             raise ValueError(f"A quantidade do item {i + 1} deve ser maior que zero.")
         if valor < 0:
-            raise ValueError(f"O valor do item {i + 1} não pode ser negativo.")
+            raise ValueError(f"O valor do item {i + 1} nÃ£o pode ser negativo.")
         itens.append({"descricao": desc, "quantidade": qtd, "unidade": unidade, "valor": valor, "total": qtd * valor})
 
     if not itens:
-        raise ValueError("Adicione pelo menos um item ao orçamento.")
+        raise ValueError("Adicione pelo menos um item ao orÃ§amento.")
     if len(itens) > MAX_ITENS_TEMPLATE:
-        raise ValueError(f"O modelo original comporta até {MAX_ITENS_TEMPLATE} itens por orçamento.")
+        raise ValueError(f"O modelo original comporta atÃ© {MAX_ITENS_TEMPLATE} itens por orÃ§amento.")
 
     total = sum(i["total"] for i in itens)
     now = datetime.now().isoformat(timespec="seconds")
@@ -460,17 +460,17 @@ def update_budget_from_form(orcamento_id):
         if not desc and qtd == 0 and valor == 0:
             continue
         if not desc:
-            raise ValueError(f"Informe a descrição do item {i + 1}.")
+            raise ValueError(f"Informe a descriÃ§Ã£o do item {i + 1}.")
         if qtd <= 0:
             raise ValueError(f"A quantidade do item {i + 1} deve ser maior que zero.")
         if valor < 0:
-            raise ValueError(f"O valor do item {i + 1} não pode ser negativo.")
+            raise ValueError(f"O valor do item {i + 1} nÃ£o pode ser negativo.")
         itens.append({"descricao": desc, "quantidade": qtd, "unidade": unidade, "valor": valor, "total": qtd * valor})
 
     if not itens:
-        raise ValueError("Adicione pelo menos um item ao orçamento.")
+        raise ValueError("Adicione pelo menos um item ao orÃ§amento.")
     if len(itens) > MAX_ITENS_TEMPLATE:
-        raise ValueError(f"O modelo original comporta até {MAX_ITENS_TEMPLATE} itens por orçamento.")
+        raise ValueError(f"O modelo original comporta atÃ© {MAX_ITENS_TEMPLATE} itens por orÃ§amento.")
 
     total = sum(i["total"] for i in itens)
     now = datetime.now().isoformat(timespec="seconds")
@@ -478,7 +478,7 @@ def update_budget_from_form(orcamento_id):
     with db_conn() as con:
         atual = con.execute("SELECT * FROM orcamentos WHERE id=?", (orcamento_id,)).fetchone()
         if not atual:
-            raise FileNotFoundError("Orçamento não encontrado.")
+            raise FileNotFoundError("OrÃ§amento nÃ£o encontrado.")
 
         if cliente_id:
             existing = con.execute("SELECT id FROM clientes WHERE id=?", (cliente_id,)).fetchone()
@@ -523,7 +523,7 @@ def budget_data(orcamento_id):
 
 
 def _prepare_logo_for_excel(source: Path) -> Path:
-    """Recorta margens transparentes/brancas para não achatar a marca no PDF."""
+    """Recorta margens transparentes/brancas para nÃ£o achatar a marca no PDF."""
     GENERATED.mkdir(parents=True, exist_ok=True)
     out = GENERATED / "_logo_render.png"
     with PILImage.open(source) as original:
@@ -531,7 +531,7 @@ def _prepare_logo_for_excel(source: Path) -> Path:
         full = (0, 0, image.width, image.height)
         bbox = image.getchannel("A").getbbox()
 
-        # JPGs e imagens sem transparência: detecta conteúdo diferente do branco.
+        # JPGs e imagens sem transparÃªncia: detecta conteÃºdo diferente do branco.
         if not bbox or bbox == full:
             rgb = image.convert("RGB")
             bg = PILImage.new("RGB", rgb.size, "white")
@@ -553,8 +553,8 @@ def _prepare_logo_for_excel(source: Path) -> Path:
 
 
 def _arrange_header_images(ws, logo_source: Path):
-    """Alinha logo e ícones do cabeçalho próximos aos respectivos textos."""
-    # Identifica os desenhos originais pela âncora do modelo.
+    """Alinha logo e Ã­cones do cabeÃ§alho prÃ³ximos aos respectivos textos."""
+    # Identifica os desenhos originais pela Ã¢ncora do modelo.
     icons = {}
     kept = []
     for img in list(ws._images):
@@ -569,7 +569,7 @@ def _arrange_header_images(ws, logo_source: Path):
             continue
         if key == (0, 3):       # CNPJ
             icons["documento"] = img
-        elif key == (1, 1):     # localização
+        elif key == (1, 1):     # localizaÃ§Ã£o
             icons["endereco"] = img
         elif key == (2, 3):     # e-mail
             icons["email"] = img
@@ -580,7 +580,7 @@ def _arrange_header_images(ws, logo_source: Path):
 
     ws._images = kept
 
-    # Logo sempre é reinserida recortada, inclusive a logo padrão do modelo.
+    # Logo sempre Ã© reinserida recortada, inclusive a logo padrÃ£o do modelo.
     render_logo = _prepare_logo_for_excel(logo_source)
     with PILImage.open(render_logo) as pil:
         w, h = pil.size
@@ -591,8 +591,8 @@ def _arrange_header_images(ws, logo_source: Path):
     logo.height = max(1, int(h * scale))
     ws.add_image(logo, "A1")
 
-    # Ãcones ficam no início do próprio bloco de texto para evitar o grande vão visual.
-    # O texto recebe um pequeno recuo para não ficar sobre a imagem.
+    # ÃƒÂcones ficam no inÃ­cio do prÃ³prio bloco de texto para evitar o grande vÃ£o visual.
+    # O texto recebe um pequeno recuo para nÃ£o ficar sobre a imagem.
     positions = {
     	"documento": ("D1", 17, 17),
     	"endereco": ("D2", 18, 18),
@@ -608,18 +608,18 @@ def _arrange_header_images(ws, logo_source: Path):
             ws.add_image(img)
 
 def validate_template_structure():
-    """Valida os pontos essenciais do Excel mestre antes de gerar uma cópia."""
+    """Valida os pontos essenciais do Excel mestre antes de gerar uma cÃ³pia."""
     if not TEMPLATE_XLSX.exists():
-        raise FileNotFoundError("A planilha modelo não foi encontrada.")
+        raise FileNotFoundError("A planilha modelo nÃ£o foi encontrada.")
 
     check = load_workbook(TEMPLATE_XLSX, read_only=False, data_only=False)
     try:
-        if "ORÇAMENTO" not in check.sheetnames:
-            raise RuntimeError("O modelo mestre está inválido: aba ORÇAMENTO não encontrada.")
-        ws = check["ORÇAMENTO"]
+        if "ORÃ‡AMENTO" not in check.sheetnames:
+            raise RuntimeError("O modelo mestre estÃ¡ invÃ¡lido: aba ORÃ‡AMENTO nÃ£o encontrada.")
+        ws = check["ORÃ‡AMENTO"]
         expected = {
             "A8": "DADOS DO CLIENTE",
-            "A14": "ORÇAMENTO",
+            "A14": "ORÃ‡AMENTO",
             "A15": "Item",
             "B15": "Qtd.",
             "C15": "Uni.",
@@ -630,13 +630,13 @@ def validate_template_structure():
             if ws[cell].value != value:
                 raise RuntimeError(
                     f"O modelo mestre parece ter sido alterado ({cell}). "
-                    "Restaure o arquivo do sistema antes de gerar novos orçamentos."
+                    "Restaure o arquivo do sistema antes de gerar novos orÃ§amentos."
                 )
 
         prefixes = {
             "C9": "CPF/CNPJ:",
             "C11": "Telefone:",
-            "D38": "Condições de pagamento:",
+            "D38": "CondiÃ§Ãµes de pagamento:",
             "D39": "Prazo de entrega:",
         }
         for cell, prefix in prefixes.items():
@@ -644,13 +644,13 @@ def validate_template_structure():
             if not current.startswith(prefix):
                 raise RuntimeError(
                     f"O modelo mestre parece ter sido alterado ({cell}). "
-                    "Restaure o arquivo do sistema antes de gerar novos orçamentos."
+                    "Restaure o arquivo do sistema antes de gerar novos orÃ§amentos."
                 )
 
         if ws["A16"].font.name != "Arial":
             raise RuntimeError(
                 "A fonte principal do modelo mestre foi alterada. "
-                "Restaure o modelo do sistema antes de gerar novos orçamentos."
+                "Restaure o modelo do sistema antes de gerar novos orÃ§amentos."
             )
     finally:
         check.close()
@@ -658,7 +658,7 @@ def validate_template_structure():
 def generate_excel(orcamento_id):
     o, itens = budget_data(orcamento_id)
     if not o:
-        raise FileNotFoundError("Orçamento não encontrado.")
+        raise FileNotFoundError("OrÃ§amento nÃ£o encontrado.")
     validate_template_structure()
 
     GENERATED.mkdir(parents=True, exist_ok=True)
@@ -666,10 +666,10 @@ def generate_excel(orcamento_id):
     shutil.copy2(TEMPLATE_XLSX, out)
 
     wb = load_workbook(out)
-    ws = wb["ORÇAMENTO"]
+    ws = wb["ORÃ‡AMENTO"]
 
     # Ajuste da coluna ITEM para evitar corte no PDF.
-    # Proporções compactas para o PDF: prioriza a descrição e evita grandes
+    # ProporÃ§Ãµes compactas para o PDF: prioriza a descriÃ§Ã£o e evita grandes
     # vazios nas colunas curtas de quantidade, unidade e valores.
     ws.column_dimensions["A"].width = 60
     ws.column_dimensions["B"].width = 8
@@ -678,7 +678,7 @@ def generate_excel(orcamento_id):
     ws.column_dimensions["E"].width = 18
     empresa = get_company()
 
-    # Cabeçalho compacto: ícone e texto ficam no mesmo bloco visual.
+    # CabeÃ§alho compacto: Ã­cone e texto ficam no mesmo bloco visual.
     if empresa:
         recuo = "      "
         ws["D1"] = f"{recuo}{empresa['documento'] or ''}"
@@ -694,31 +694,31 @@ def generate_excel(orcamento_id):
     if logo_source.exists():
         _arrange_header_images(ws, logo_source)
 
-    # Cliente: rótulo e valor juntos, usando a largura de C:D para não criar vão nem corte.
+    # Cliente: rÃ³tulo e valor juntos, usando a largura de C:D para nÃ£o criar vÃ£o nem corte.
     for faixa in ("C9:D9", "C11:D11"):
         if faixa not in [str(rng) for rng in ws.merged_cells.ranges]:
             ws.merge_cells(faixa)
     ws["A9"] = f"Nome:  {o['cliente_nome'] or ''}"
     ws["C9"] = f"CPF/CNPJ:  {o['cliente_documento'] or ''}"
-    ws["A10"] = f"Endereço:  {o['cliente_endereco'] or ''}"
+    ws["A10"] = f"EndereÃ§o:  {o['cliente_endereco'] or ''}"
     ws["A11"] = f"E-mail:  {o['cliente_email'] or ''}"
     ws["C11"] = f"Telefone:  {o['cliente_telefone'] or ''}"
 
     # Limpa as linhas de itens. Linhas sem item ficam realmente vazias.
-    # O formato do total também oculta zero, evitando R$ 0,00 em linhas não utilizadas.
+    # O formato do total tambÃ©m oculta zero, evitando R$ 0,00 em linhas nÃ£o utilizadas.
     for row in range(16, 36):
         ws.cell(row, 1).value = None
         ws.cell(row, 2).value = None
         ws.cell(row, 3).value = None
         ws.cell(row, 4).value = None
         ws.cell(row, 5).value = None
-        ws.cell(row, 5).number_format = '[$R$-pt-BR] #.##0,00;[Red]-[$R$-pt-BR] #.##0,00;;'
+        ws.cell(row, 5).number_format = "R$ #,##0.00;[Red]-R$ #,##0.00;;"
 
     for idx, it in enumerate(itens, start=16):
         ws.cell(idx, 1).value = it["descricao"]
         ws.cell(idx, 2).value = it["quantidade"]
         ws.cell(idx, 3).value = it["unidade"]
-        ws.cell(idx, 4).value = it["valor_unitario"]
+        ws.cell(idx, 5).value = it["total"] if it["total"] else None
         ws.cell(idx, 5).value = it["total"]
 
     used_rows = set(range(16, 16 + len(itens)))
@@ -727,8 +727,8 @@ def generate_excel(orcamento_id):
             ws.row_dimensions[row].hidden = False
             description = str(ws.cell(row, 1).value or "")
             if description:
-                # Conta separadamente quebras manuais e quebras automáticas.
-                # Somar apenas o tamanho total cortava a última linha no Excel.
+                # Conta separadamente quebras manuais e quebras automÃ¡ticas.
+                # Somar apenas o tamanho total cortava a Ãºltima linha no Excel.
                 linhas = sum(
                     max(1, (len(parte) + 54) // 55)
                     for parte in (description.splitlines() or [""])
@@ -738,23 +738,23 @@ def generate_excel(orcamento_id):
             else:
                 ws.row_dimensions[row].height = 22
         else:
-            # As linhas existem para permitir até 20 itens, mas não devem
-            # aparecer vazias no Excel/PDF quando o orçamento usa menos.
+            # As linhas existem para permitir atÃ© 20 itens, mas nÃ£o devem
+            # aparecer vazias no Excel/PDF quando o orÃ§amento usa menos.
             ws.row_dimensions[row].height = 0
             ws.row_dimensions[row].hidden = True
 
     ws["E36"] = o["total"]
 
-    # Condições e prazo ficam em um único bloco, sem o grande espaço entre rótulo e valor.
+    # CondiÃ§Ãµes e prazo ficam em um Ãºnico bloco, sem o grande espaÃ§o entre rÃ³tulo e valor.
     for faixa in ("D38:E38", "D39:E39"):
         if faixa not in [str(rng) for rng in ws.merged_cells.ranges]:
             ws.merge_cells(faixa)
-    ws["D38"] = f"Condições de pagamento:  {o['pagamento'] or ''}"
+    ws["D38"] = f"CondiÃ§Ãµes de pagamento:  {o['pagamento'] or ''}"
     ws["D39"] = f"Prazo de entrega:  {o['prazo'] or ''}"
-    # Observações usam uma área larga e alta para não cortar textos com mais de uma linha.
+    # ObservaÃ§Ãµes usam uma Ã¡rea larga e alta para nÃ£o cortar textos com mais de uma linha.
     faixa_obs = "A41:E44"
     if faixa_obs not in [str(rng) for rng in ws.merged_cells.ranges]:
-        # Remove mesclagens conflitantes na área, se houver.
+        # Remove mesclagens conflitantes na Ã¡rea, se houver.
         for rng in list(ws.merged_cells.ranges):
             if rng.min_row <= 44 and rng.max_row >= 41 and rng.min_col <= 5 and rng.max_col >= 1:
                 ws.unmerge_cells(str(rng))
@@ -778,7 +778,7 @@ def generate_excel(orcamento_id):
         else:
             ws.merge_cells(faixa)
 
-    ws["A45"] = 'O orçamento é válido por 30 dias.'
+    ws["A45"] = 'O orÃ§amento Ã© vÃ¡lido por 30 dias.'
     ws["A45"].font = copy.copy(ws["A41"].font)
     ws["A45"].font = ws["A45"].font.copy(
         name="Arial", size=12, bold=True, italic=False
@@ -789,7 +789,7 @@ def generate_excel(orcamento_id):
     )
     ws.row_dimensions[45].height = 24
 
-    closing = 'Desde já, agradecemos a preferência.'
+    closing = 'Desde jÃ¡, agradecemos a preferÃªncia.'
     ws["A47"] = closing
     ws["A47"].font = copy.copy(ws["A41"].font)
     ws["A47"].font = ws["A47"].font.copy(
@@ -801,7 +801,7 @@ def generate_excel(orcamento_id):
     )
     ws.row_dimensions[47].height = 24
 
-    # Limpa a frase antiga do modelo para não duplicar.
+    # Limpa a frase antiga do modelo para nÃ£o duplicar.
     if ws["C44"].value == closing:
         ws["C44"] = None
 
@@ -914,10 +914,10 @@ def libreoffice_to_pdf(xlsx_path: Path):
 def excel_to_pdf(xlsx_path: Path):
     """Converte o Excel gerado para PDF usando o Microsoft Excel no Windows.
 
-    Cada requisição do Flask pode rodar em uma thread diferente. O COM do Excel
+    Cada requisiÃ§Ã£o do Flask pode rodar em uma thread diferente. O COM do Excel
     precisa ser inicializado explicitamente nessa thread para funcionar de forma
-    estável. A configuração de página já vem pronta do arquivo .xlsx, então não
-    alteramos PageSetup pelo COM antes da exportação.
+    estÃ¡vel. A configuraÃ§Ã£o de pÃ¡gina jÃ¡ vem pronta do arquivo .xlsx, entÃ£o nÃ£o
+    alteramos PageSetup pelo COM antes da exportaÃ§Ã£o.
     """
     if sys.platform != "win32":
         return libreoffice_to_pdf(xlsx_path)
@@ -927,13 +927,13 @@ def excel_to_pdf(xlsx_path: Path):
         import win32com.client  # type: ignore
     except Exception as exc:
         raise RuntimeError(
-            "O componente de integração com o Excel não está instalado. "
+            "O componente de integraÃ§Ã£o com o Excel nÃ£o estÃ¡ instalado. "
             "Execute INSTALAR_E_INICIAR.bat novamente."
         ) from exc
 
     xlsx_path = xlsx_path.resolve()
     if not xlsx_path.exists():
-        raise FileNotFoundError(f"Arquivo Excel não encontrado: {xlsx_path.name}")
+        raise FileNotFoundError(f"Arquivo Excel nÃ£o encontrado: {xlsx_path.name}")
 
     pdf_path = xlsx_path.with_suffix(".pdf")
     if pdf_path.exists():
@@ -946,7 +946,7 @@ def excel_to_pdf(xlsx_path: Path):
     workbook = None
     com_initialized = False
     try:
-        # Flask atende requisições em threads; o COM precisa ser iniciado em cada uma.
+        # Flask atende requisiÃ§Ãµes em threads; o COM precisa ser iniciado em cada uma.
         pythoncom.CoInitialize()
         com_initialized = True
 
@@ -962,10 +962,10 @@ def excel_to_pdf(xlsx_path: Path):
             IgnoreReadOnlyRecommended=True,
             AddToMru=False,
         )
-        worksheet = workbook.Worksheets("ORÇAMENTO")
+        worksheet = workbook.Worksheets("ORÃ‡AMENTO")
 
-        # O print area, A4, margens e ajuste para uma página já estão salvos no modelo.
-        # Alterar PageSetup via COM pode falhar em algumas instalações do Excel/impressora.
+        # O print area, A4, margens e ajuste para uma pÃ¡gina jÃ¡ estÃ£o salvos no modelo.
+        # Alterar PageSetup via COM pode falhar em algumas instalaÃ§Ãµes do Excel/impressora.
         worksheet.ExportAsFixedFormat(
             Type=0,
             Filename=str(pdf_path),
@@ -976,15 +976,15 @@ def excel_to_pdf(xlsx_path: Path):
         )
 
         if not pdf_path.exists() or pdf_path.stat().st_size == 0:
-            raise RuntimeError("O Excel terminou a exportação, mas o arquivo PDF não foi criado.")
+            raise RuntimeError("O Excel terminou a exportaÃ§Ã£o, mas o arquivo PDF nÃ£o foi criado.")
 
         return pdf_path
     except Exception as exc:
-        # Registra o erro real no terminal para diagnóstico, sem mascará-lo.
+        # Registra o erro real no terminal para diagnÃ³stico, sem mascarÃ¡-lo.
         print("\n[ERRO PDF] Falha ao converter Excel para PDF:", file=sys.stderr)
         traceback.print_exc()
         detail = str(exc).strip() or exc.__class__.__name__
-        raise RuntimeError(f"Não foi possível gerar o PDF pelo Excel. Detalhe: {detail}") from exc
+        raise RuntimeError(f"NÃ£o foi possÃ­vel gerar o PDF pelo Excel. Detalhe: {detail}") from exc
     finally:
         if workbook is not None:
             try:
@@ -1054,7 +1054,7 @@ def login():
         password = request.form.get("password", "")
 
         if len(username) > 40 or len(password) > 256:
-            flash("Usuário ou senha inválidos.", "error")
+            flash("UsuÃ¡rio ou senha invÃ¡lidos.", "error")
             return render_template("login.html")
 
         client_key = request.remote_addr or "unknown"
@@ -1071,7 +1071,7 @@ def login():
 
         if not user or not check_password_hash(user["password_hash"], password):
             register_login_failure(client_key)
-            flash("Usuário ou senha inválidos.", "error")
+            flash("UsuÃ¡rio ou senha invÃ¡lidos.", "error")
             return render_template("login.html")
 
         clear_login_failures(client_key)
@@ -1103,7 +1103,7 @@ def novo_orcamento():
     if request.method == "POST":
         try:
             oid = save_budget_from_form()
-            flash("Orçamento salvo com sucesso.", "success")
+            flash("OrÃ§amento salvo com sucesso.", "success")
             return redirect(url_for("ver_orcamento", orcamento_id=oid))
         except ValueError as e:
             flash(str(e), "error")
@@ -1154,7 +1154,7 @@ def servicos():
     if request.method == "POST":
         desc = (request.form.get("descricao") or "").strip()
         if not desc:
-            flash("Informe a descrição do serviço.", "error")
+            flash("Informe a descriÃ§Ã£o do serviÃ§o.", "error")
         else:
             try:
                 with db_conn() as con:
@@ -1162,10 +1162,10 @@ def servicos():
                         "INSERT INTO servicos(descricao, unidade, valor_padrao) VALUES(?,?,?)",
                         (desc, request.form.get("unidade", "").strip(), as_float(request.form.get("valor_padrao"))),
                     )
-                flash("Serviço cadastrado.", "success")
+                flash("ServiÃ§o cadastrado.", "success")
                 return redirect(url_for("servicos"))
             except sqlite3.IntegrityError:
-                flash("Esse serviço já está cadastrado.", "error")
+                flash("Esse serviÃ§o jÃ¡ estÃ¡ cadastrado.", "error")
     with db_conn() as con:
         rows = con.execute("SELECT * FROM servicos ORDER BY descricao").fetchall()
     return render_template("servicos.html", servicos=rows, unidades=UNIDADES)
@@ -1176,7 +1176,7 @@ def servicos():
 def excluir_servico(servico_id):
     with db_conn() as con:
         con.execute("DELETE FROM servicos WHERE id=?", (servico_id,))
-    flash("Serviço removido.", "success")
+    flash("ServiÃ§o removido.", "success")
     return redirect(url_for("servicos"))
 
 
@@ -1201,7 +1201,7 @@ def empresa():
             filename = secure_filename(logo.filename)
             ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
             if ext not in ALLOWED_LOGO:
-                flash("Logo inválido. Use PNG, JPG ou JPEG.", "error")
+                flash("Logo invÃ¡lido. Use PNG, JPG ou JPEG.", "error")
                 return redirect(url_for("empresa"))
             try:
                 COMPANY_DIR.mkdir(parents=True, exist_ok=True)
@@ -1211,7 +1211,7 @@ def empresa():
                     image.save(COMPANY_LOGO, "PNG", optimize=True)
                 logo_rel = str(COMPANY_LOGO.relative_to(BASE)).replace("\\", "/")
             except Exception:
-                flash("Não foi possível processar essa imagem. Tente outro arquivo.", "error")
+                flash("NÃ£o foi possÃ­vel processar essa imagem. Tente outro arquivo.", "error")
                 return redirect(url_for("empresa"))
 
         with db_conn() as con:
@@ -1220,7 +1220,7 @@ def empresa():
                 (nome, documento, endereco, email, telefone, instagram, logo_rel,
                  datetime.now().isoformat(timespec="seconds")),
             )
-        flash("Informações da empresa atualizadas.", "success")
+        flash("InformaÃ§Ãµes da empresa atualizadas.", "success")
         return redirect(url_for("empresa"))
 
     return render_template("empresa.html", empresa=get_company(), has_logo=COMPANY_LOGO.exists())
@@ -1234,7 +1234,7 @@ def remover_logo():
     with db_conn() as con:
         con.execute("UPDATE empresa_config SET logo_path='', atualizado_em=? WHERE id=1",
                     (datetime.now().isoformat(timespec="seconds"),))
-    flash("Logo personalizada removida. Novos orçamentos voltarão a usar a marca original da planilha.", "success")
+    flash("Logo personalizada removida. Novos orÃ§amentos voltarÃ£o a usar a marca original da planilha.", "success")
     return redirect(url_for("empresa"))
 
 
@@ -1242,7 +1242,7 @@ def remover_logo():
 @login_required
 def ver_logo_empresa():
     if not COMPANY_LOGO.exists():
-        return "Logo não cadastrada", 404
+        return "Logo nÃ£o cadastrada", 404
     return send_file(COMPANY_LOGO)
 
 
@@ -1266,7 +1266,7 @@ def historico():
 def ver_orcamento(orcamento_id):
     o, itens = budget_data(orcamento_id)
     if not o:
-        return "Orçamento não encontrado", 404
+        return "OrÃ§amento nÃ£o encontrado", 404
     return render_template("detalhe.html", o=o, itens=itens)
 
 
@@ -1275,12 +1275,12 @@ def ver_orcamento(orcamento_id):
 def editar_orcamento(orcamento_id):
     o, itens = budget_data(orcamento_id)
     if not o:
-        return "Orçamento não encontrado", 404
+        return "OrÃ§amento nÃ£o encontrado", 404
 
     if request.method == "POST":
         try:
             update_budget_from_form(orcamento_id)
-            flash("Orçamento atualizado com sucesso.", "success")
+            flash("OrÃ§amento atualizado com sucesso.", "success")
             return redirect(url_for("ver_orcamento", orcamento_id=orcamento_id))
         except (ValueError, FileNotFoundError) as e:
             flash(str(e), "error")
@@ -1325,7 +1325,7 @@ def baixar_pdf(orcamento_id):
 def excluir_orcamento(orcamento_id):
     with db_conn() as con:
         con.execute("DELETE FROM orcamentos WHERE id=?", (orcamento_id,))
-    flash("Orçamento excluído do histórico.", "success")
+    flash("OrÃ§amento excluÃ­do do histÃ³rico.", "success")
     return redirect(url_for("historico"))
 
 
@@ -1348,8 +1348,9 @@ if __name__ == "__main__":
     init_db()
     host = os.environ.get("DSOUZA_HOST", "127.0.0.1")
     port = int(os.environ.get("DSOUZA_PORT", "5000"))
-    print(f"\nDSouza Orçamentos: http://{host}:{port}\n")
+    print(f"\nDSouza OrÃ§amentos: http://{host}:{port}\n")
     app.run(host=host, port=port, debug=False)
+
 
 
 
