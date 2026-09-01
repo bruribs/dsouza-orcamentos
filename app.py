@@ -684,6 +684,9 @@ def generate_excel(orcamento_id):
 
     wb = load_workbook(out)
     ws = _orcamento_sheet(wb)
+    for auxiliary_sheet in wb.worksheets:
+        if auxiliary_sheet is not ws:
+            auxiliary_sheet.sheet_state = "hidden"
 
     # Ajuste da coluna ITEM para evitar corte no PDF.
     # Proporções compactas para o PDF: prioriza a descrição e evita grandes
@@ -755,10 +758,10 @@ def generate_excel(orcamento_id):
                     max(1, (len(parte) + 54) // 55)
                     for parte in (description.splitlines() or [""])
                 )
-                altura = min(180, max(30, linhas * 15))
+                altura = min(180, max(24, linhas * 19))
                 ws.row_dimensions[row].height = altura
             else:
-                ws.row_dimensions[row].height = 22
+                ws.row_dimensions[row].height = 24
         else:
             # As linhas existem para permitir até 20 itens, mas não devem
             # aparecer vazias no Excel/PDF quando o orçamento usa menos.
@@ -788,7 +791,7 @@ def generate_excel(orcamento_id):
     ws["A41"].alignment = ws["A41"].alignment.copy(wrap_text=True, vertical="top", horizontal="left")
     linhas_texto = obs_texto.splitlines() or [""]
     linhas_visuais = sum(max(1, (len(linha) + 89) // 90) for linha in linhas_texto)
-    altura_total = 72 if not obs_texto else min(120, max(72, 18 + linhas_visuais * 13))
+    altura_total = 44 if not obs_texto else min(120, max(44, 18 + linhas_visuais * 13))
     altura_linha = altura_total / 4
     for row in range(41, 45):
         ws.row_dimensions[row].height = altura_linha
@@ -810,7 +813,7 @@ def generate_excel(orcamento_id):
     ws["A45"].alignment = ws["A45"].alignment.copy(
         horizontal="center", vertical="center", wrap_text=True
     )
-    ws.row_dimensions[45].height = 24
+    ws.row_dimensions[45].height = 20
 
     closing = 'Desde já, agradecemos a preferência.'
     ws["A47"] = closing
@@ -822,19 +825,20 @@ def generate_excel(orcamento_id):
     ws["A47"].alignment = ws["A47"].alignment.copy(
         horizontal="center", vertical="center", wrap_text=True
     )
-    ws.row_dimensions[47].height = 24
+    ws.row_dimensions[46].height = 6
+    ws.row_dimensions[47].height = 20
 
     # Limpa a frase antiga do modelo para não duplicar.
     if ws["C44"].value == closing:
         ws["C44"] = None
 
     ws.print_area = "A1:E47"
-    ws.print_title_rows = "14:15"
+    ws.print_title_rows = None
     ws.sheet_view.showGridLines = False
     ws.page_setup.orientation = "portrait"
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 2
+    ws.page_setup.fitToHeight = 1
     ws.page_setup.scale = None
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_options.horizontalCentered = True
@@ -844,6 +848,9 @@ def generate_excel(orcamento_id):
     ws.page_margins.bottom = 0.25
     ws.page_margins.header = 0
     ws.page_margins.footer = 0
+
+    for compact_row in (5, 6, 7, 12, 13, 37, 40):
+        ws.row_dimensions[compact_row].height = 5
 
     for row in range(16, 36):
         ws.cell(row, 1).alignment = copy.copy(ws.cell(row, 1).alignment)
