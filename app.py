@@ -724,6 +724,7 @@ def generate_excel(orcamento_id):
     used_rows = set(range(16, 16 + len(itens)))
     for row in range(16, 36):
         if row in used_rows:
+            ws.row_dimensions[row].hidden = False
             description = str(ws.cell(row, 1).value or "")
             if description:
                 # Conta separadamente quebras manuais e quebras automáticas.
@@ -737,7 +738,10 @@ def generate_excel(orcamento_id):
             else:
                 ws.row_dimensions[row].height = 22
         else:
-            ws.row_dimensions[row].height = 22
+            # As linhas existem para permitir até 20 itens, mas não devem
+            # aparecer vazias no Excel/PDF quando o orçamento usa menos.
+            ws.row_dimensions[row].height = 0
+            ws.row_dimensions[row].hidden = True
 
     ws["E36"] = o["total"]
 
